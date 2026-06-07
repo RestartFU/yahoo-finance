@@ -63,12 +63,10 @@ func unmarshalWireMessage(data []byte, v any) error {
 			length, n := decodeVarint(data[i:])
 			i += n
 			if i+int(length) <= len(data) {
-				strVal := string(data[i : i+int(length)])
-				if !field.IsValid() || !field.CanSet() || field.Kind() != reflect.String {
-					return fmt.Errorf("field %d is not a valid string field", fieldNum)
+				if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
+					strVal := string(data[i : i+int(length)])
+					field.SetString(strVal)
 				}
-
-				field.SetString(strVal)
 				i += int(length)
 			}
 		case WireTypeFloat32:
@@ -76,10 +74,9 @@ func unmarshalWireMessage(data []byte, v any) error {
 				val := uint32(data[i]) | uint32(data[i+1])<<8 | uint32(data[i+2])<<16 | uint32(data[i+3])<<24
 				floatVal := *(*float32)(unsafe.Pointer(&val))
 
-				if !field.IsValid() || !field.CanSet() || field.Kind() != reflect.Float32 {
-					return fmt.Errorf("field %d is not a valid float32 field", fieldNum)
+				if field.IsValid() && field.CanSet() && field.Kind() == reflect.Float32 {
+					field.SetFloat(float64(floatVal))
 				}
-				field.SetFloat(float64(floatVal))
 				i += 4
 			}
 		default:
